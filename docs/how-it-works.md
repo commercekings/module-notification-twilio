@@ -12,7 +12,7 @@ The parts of `commercekings/module-notification-twilio`. Start with the [README]
 | `Model\Webhook\Signature` | `X-Twilio-Signature` against the configured Public URL of each website of the account; 403 otherwise | – |
 | `Observer\QueueOptinConfirmation`, `Model\Optin\Confirmation` | `first_for_address` → queue `twilio_optin`; one text per number and website, claimed in the delivery state (type `twilio_optin`, reference = the contact) before it is sent; not stoppable, no cooldown | `commercekings_notification_subscription_saved`, `QueueInterface`, `NotificationTypeInterface` (`Model\TypePool`), `DeliveryStateInterface`, `SenderInterface` |
 | `Cron\CleanUpOptinState` | daily 03:35: drops those claims for contacts Notification no longer keeps | `ContactRepositoryInterface` |
-| `Model\NumberZones` | the number's time zones (libphonenumber) for quiet hours; none for an unknown number or the whole store | `QuietHoursZoneInterface`, `Model\QuietHours` "zones" |
+| `Model\NumberZones` | the number's time zones (libphonenumber) for quiet hours; the store's zone for a number it cannot place, none for the whole store | `QuietHoursZoneInterface`, `Model\QuietHours` "zones" |
 | di.xml `EndpointRegistry` | the status webhook in module-rate-limit (not the reply webhook) | module-rate-limit "definitions" |
 
 **Senders and numbers.** SMS goes from the Messaging Service when set, else the number; WhatsApp from its number,
