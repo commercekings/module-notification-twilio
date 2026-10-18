@@ -8,7 +8,7 @@
 "One text to a number's first sign-up in the website, as US carriers require. A new cart of the same number gets none.","One text to a number's first sign-up in the website, as US carriers require. A new cart of the same number gets none."
 "Opt-in confirmation text","Opt-in confirmation text"
 "Opt-in confirmation","Opt-in confirmation"
-"Per notification type (e.g. cart_reminder_whatsapp, twilio_optin) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. name, product, total, link for the WhatsApp cart reminder).","Per notification type (e.g. cart_reminder_whatsapp, twilio_optin) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. name, product, total, link for the WhatsApp cart reminder)."
+"Per notification type (e.g. twilio_optin, or your own WhatsApp notification type) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. store for twilio_optin).","Per notification type (e.g. twilio_optin, or your own WhatsApp notification type) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. store for twilio_optin)."
 "Public URL","Public URL"
 "Recommended for SMS (MG…): Twilio picks the sending number and handles STOP and START. Used for WhatsApp too when no WhatsApp number is set.","Recommended for SMS (MG…): Twilio picks the sending number and handles STOP and START. Used for WhatsApp too when no WhatsApp number is set."
 "SMS number","SMS number"

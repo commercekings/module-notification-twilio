@@ -26,19 +26,20 @@ Connecting `commercekings/module-notification-twilio` to Twilio. Start with the 
 | Opt-in confirmation, text | per store view; `{{store}}` is the store's name |
 | WhatsApp templates | one row per notification type and locale |
 
-With several SMS or WhatsApp providers installed, pick Twilio under *Delivery*.
+Install one provider module per channel: with another SMS or WhatsApp provider module installed too, selecting Twilio
+under *Delivery* alone doesn't separate their recipient time zones.
 
 ### WhatsApp templates
 
 | Notification type | Locale | Content SID | Variables, in order |
 |---|---|---|---|
-| `cart_reminder_whatsapp` | `de` | `HX…` | `name, product, total, link` |
+| `your_whatsapp_type` | `de` | `HX…` | the variables your notification type gives, e.g. `name, link` |
 | `twilio_optin` | | `HX…` | `store` |
 
 The locale matches exactly (`de_CH`), then by language (`de`), then an empty locale. The variables fill the template's
-`{{1}}`, `{{2}}`, … from the notification's data (plain text only; the WhatsApp cart reminder gives `name`,
-`product`, `total`, `link` and `store`). A message without a template is not sent: the
-feature counts a failed attempt.
+`{{1}}`, `{{2}}`, … from the notification's data (plain text only; `twilio_optin` gives `store`). No WhatsApp cart
+reminder ships: the abandoned cart texts are SMS. A message without a template is not sent: the feature counts a
+failed attempt.
 
 ## Check it
 

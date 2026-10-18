@@ -50,6 +50,8 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
 
 ## Before going live
 
+- **One provider module per channel.** With Infobip also installed for SMS or WhatsApp, recipient time zones come from
+  one of them – keep one.
 - Use a Messaging Service with Twilio's Advanced Opt-Out, or make sure the number answers STOP and HELP.
 - Set the incoming-message webhook (POST) on the number or Messaging Service; delivery status is requested per message.
 - Notification's *Quiet hours* are on by default for SMS and WhatsApp (20:00–08:00) – check the window; this module

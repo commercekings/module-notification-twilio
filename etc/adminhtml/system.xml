@@ -58,7 +58,7 @@
                     <label>WhatsApp templates</label>
                     <frontend_model>CommerceKings\NotificationTwilio\Block\Adminhtml\Form\Field\TemplateMap</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Per notification type (e.g. cart_reminder_whatsapp, twilio_optin) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. name, product, total, link for the WhatsApp cart reminder).]]></comment>
+                    <comment><![CDATA[Per notification type (e.g. twilio_optin, or your own WhatsApp notification type) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. store for twilio_optin).]]></comment>
                 </field>
             </group>
         </section>
