@@ -6,8 +6,14 @@ Works with Magento 2.4.4+ · PHP 8.2–8.5 · Twilio Programmable Messaging
 
 **Text and WhatsApp messages for every CommerceKings notification, through your Twilio account.**
 
-- **Two channels, one setup.** SMS and WhatsApp providers for [Notification](https://github.com/commercekings/module-notification);
-  every notification on those channels (e.g. SMS cart reminders) is sent through Twilio.
+Email is built into Notification and works out of the box; this module adds text and WhatsApp. **Works together with:**
+
+- [module-notification](https://github.com/commercekings/module-notification) – the base every notification runs on.
+- [module-abandoned-cart-sms](https://github.com/commercekings/module-abandoned-cart-sms) – text-message cart reminders, sent through Twilio.
+- [module-notification-infobip](https://github.com/commercekings/module-notification-infobip) – the alternative; one provider per channel.
+
+- **Two channels, one setup.** SMS and WhatsApp providers for Notification; every notification on those channels is
+  sent through Twilio.
 - **STOP means stop.** Replies like STOP, UNSUBSCRIBE or WhatsApp's "Stop promotions" stop the number until it sends
   START; Twilio's own opt-out refusals are learned too. The webhooks check Twilio's signature.
 - **Undeliverable numbers rest.** A number Twilio reports as unreachable is left out for a while, keeping its consent.
