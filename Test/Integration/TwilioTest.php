@@ -8,6 +8,7 @@ use CommerceKings\Notification\Api\Data\Delivery;
 use CommerceKings\Notification\Api\Data\DeliveryContent;
 use CommerceKings\Notification\Api\Data\Subscription;
 use CommerceKings\Notification\Api\DeliveryStateInterface;
+use CommerceKings\Notification\Api\QuietHoursInterface;
 use CommerceKings\Notification\Api\SenderInterface;
 use CommerceKings\Notification\Api\StopListInterface;
 use CommerceKings\Notification\Api\SubscriptionRepositoryInterface;
@@ -82,6 +83,8 @@ class TwilioTest extends TestCase
         $provider = new SmsProvider($this->om->create(MessageSender::class, ['config' => $config, 'client' => $client]));
         return $this->om->create(Sender::class, [
             'providers' => new ProviderPool($this->om->get(\CommerceKings\Notification\Model\Config::class), [$provider]),
+            // quiet hours are on by default: never held here, whatever the time of the run
+            'quietHours' => $this->createStub(QuietHoursInterface::class),
         ]);
     }
 
