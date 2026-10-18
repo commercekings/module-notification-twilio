@@ -6,7 +6,7 @@ The parts of `commercekings/module-notification-twilio`. Start with the [README]
 |---|---|---|
 | `Model\Provider\SmsProvider`, `WhatsappProvider` | `twilio_sms`, `twilio_whatsapp`: send a delivery through `Model\MessageSender` | `ProviderInterface`, `Model\ProviderPool` "providers"; selectors with `Model\Config\Source\Provider` (virtual types, "channel") |
 | `Model\MessageSender` | the message: SMS text, or a WhatsApp template (`Model\TemplateMap`: `Delivery::$type` and the store's locale) with `ContentVariables`; a status callback on every message | `Data\Delivery`, `Data\DeliveryContent` |
-| `Model\Http\TwilioClient` | Twilio's REST API over Guzzle: a refusal is `TwilioException` (Twilio's code), no connection is a plain failure, no answer after sending is `MessageSentException` – never sent twice | `Exception\MessageSentException` |
+| `Model\Http\TwilioClient` | Twilio's REST API over Guzzle: a refusal is `TwilioException` (Twilio's code), a failure cURL proves came before the request left (host not found, connection refused, TLS, a timeout before any transfer) is a plain failure; anything else – a timeout waiting for the answer, an empty reply – is `MessageSentException`: never sent twice | `Exception\MessageSentException` |
 | `Controller\Webhook\Inbound` | replies: STOP words (and WhatsApp's "Stop promotions") → `stop(…, REASON_REPLY)`, START words → `resume()`; empty TwiML | `StopListInterface` |
 | `Controller\Webhook\Status` | delivery status: 30003, 30005, 30006, 21211, 21614 → `REASON_UNDELIVERABLE` (consents kept); 21610 → `REASON_REPLY` | `StopListInterface` |
 | `Model\Webhook\Signature` | `X-Twilio-Signature` against the configured Public URL of each website of the account; 403 otherwise | – |

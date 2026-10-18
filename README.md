@@ -20,6 +20,8 @@ Email is built into Notification and works out of the box; this module adds text
 - **Opt-in confirmation.** One text to a number's first sign-up, as US carriers require – never one per cart.
 - **Quiet hours in the recipient's time zone,** worked out from the number (US state laws go by local time).
 - **WhatsApp templates** per notification type and language, with the notification's own variables.
+- **Never charged twice.** A timeout counts as sent unless the request provably never left the shop, so a retry
+  never sends a second text.
 
 It is a provider module: consent, sign-ups, the stop list, quiet hours and sending stay Notification's.
 
