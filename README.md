@@ -55,6 +55,9 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
   recipient's time zone.
 - Do not rate-limit the incoming-message webhook: a refused STOP is not sent again. The status webhook may be
   limited ([module-rate-limit](https://github.com/commercekings/module-rate-limit) lists it).
+- **Protect against SMS pumping.** The public sign-up endpoints can be abused to trigger paid texts (e.g. opt-in
+  confirmations to premium-rate numbers) – plan for it: limit them with [module-rate-limit](https://github.com/commercekings/module-rate-limit) and turn on Twilio's
+  Geo Permissions (only the countries you sell to) and SMS Pumping Protection (Fraud Guard).
 
 ## Limitations
 
