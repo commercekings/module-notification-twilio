@@ -13,8 +13,6 @@ use CommerceKings\NotificationTwilio\Model\Config;
 use CommerceKings\NotificationTwilio\Model\Optin\Confirmation;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Store\Api\Data\StoreInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\TestCase;
 
 /** One confirmation per number and website, ever: claimed in Notification's delivery state before it is sent. */
@@ -49,10 +47,7 @@ class ConfirmationTest extends TestCase
         });
         $config = $this->createStub(Config::class);
         $config->method('getOptinText')->willReturn('{{store}}: you are signed up. Reply STOP to stop.');
-        $store = $this->createStub(StoreInterface::class);
-        $store->method('getName')->willReturn('Acme');
-        $stores = $this->createStub(StoreManagerInterface::class);
-        $stores->method('getStore')->willReturn($store);
+        $config->method('getStoreName')->willReturn('Acme');
         $db = $this->createStub(AdapterInterface::class);
         $db->method('update')->willReturnCallback(function ($table, $data, $where) {
             $this->updates[] = [$data, $where];
@@ -60,7 +55,7 @@ class ConfirmationTest extends TestCase
         });
         $resource = $this->createStub(ResourceConnection::class);
         $resource->method('getConnection')->willReturn($db);
-        return new Confirmation($repository, $state, $sender, $config, $stores, $resource);
+        return new Confirmation($repository, $state, $sender, $config, $resource);
     }
 
     public function testTheClaimedNumberGetsOneTextThatCannotBeStoppedOrHeld(): void
