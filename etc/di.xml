@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- the providers for Notification's SMS and WhatsApp channels -->
+    <type name="CommerceKings\Notification\Model\ProviderPool">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="twilio_sms" xsi:type="object">CommerceKings\NotificationTwilio\Model\Provider\SmsProvider</item>
+                <item name="twilio_whatsapp" xsi:type="object">CommerceKings\NotificationTwilio\Model\Provider\WhatsappProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- the admin's provider selectors for these channels (Notification's Delivery group) -->
+    <virtualType name="CommerceKingsTwilioSmsProviderSource" type="CommerceKings\Notification\Model\Config\Source\Provider">
+        <arguments>
+            <argument name="channel" xsi:type="const">CommerceKings\Notification\Api\Channel::SMS</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="CommerceKingsTwilioWhatsappProviderSource" type="CommerceKings\Notification\Model\Config\Source\Provider">
+        <arguments>
+            <argument name="channel" xsi:type="const">CommerceKings\Notification\Api\Channel::WHATSAPP</argument>
+        </arguments>
+    </virtualType>
+    <!-- quiet hours in the recipient's time zone, from the number -->
+    <type name="CommerceKings\Notification\Model\QuietHours">
+        <arguments>
+            <argument name="zones" xsi:type="array">
+                <item name="sms" xsi:type="object">CommerceKings\NotificationTwilio\Model\NumberZones</item>
+                <item name="whatsapp" xsi:type="object">CommerceKings\NotificationTwilio\Model\NumberZones</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- the opt-in confirmation, sent by Notification's shared consumer -->
+    <type name="CommerceKings\Notification\Model\TypePool">
+        <arguments>
+            <argument name="types" xsi:type="array">
+                <item name="twilio_optin" xsi:type="object">CommerceKings\NotificationTwilio\Model\Optin\Confirmation</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Twilio's REST API over Guzzle (Magento ships it) -->
+    <type name="CommerceKings\NotificationTwilio\Model\Http\TwilioClient">
+        <arguments>
+            <argument name="http" xsi:type="object">GuzzleHttp\Client</argument>
+        </arguments>
+    </type>
+    <!-- rate limits for the delivery status webhook only (module-rate-limit, if installed). Never the reply webhook:
+         a limited request gets 429, Twilio does not send it again and a STOP would be lost -->
+    <type name="CommerceKings\RateLimit\Model\EndpointRegistry">
+        <arguments>
+            <argument name="definitions" xsi:type="array">
+                <item name="twilio_status" xsi:type="array">
+                    <item name="label" xsi:type="string">Twilio: delivery status webhook</item>
+                    <item name="controller" xsi:type="string">CommerceKings\NotificationTwilio\Controller\Webhook\Status</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+</config>

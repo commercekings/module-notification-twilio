@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <commercekings_notification>
+            <twilio>
+                <auth_token backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <optin_enabled>1</optin_enabled>
+                <optin_text>{{store}}: you are signed up for text messages. Message frequency varies; message and data rates may apply. Reply STOP to stop, HELP for help.</optin_text>
+            </twilio>
+        </commercekings_notification>
+    </default>
+</config>

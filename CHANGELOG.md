@@ -1,0 +1,21 @@
+# Changelog
+
+## Unreleased (0.1.0)
+
+First release. Requires Magento 2.4.4 or later and `commercekings/module-notification`.
+
+- **Providers:** Twilio SMS (`twilio_sms`) and WhatsApp (`twilio_whatsapp`) for Notification's channels, with the
+  provider selectors under *Delivery*; credentials per website (the auth token encrypted); SMS from a Messaging
+  Service or a number, WhatsApp from its number; every message asks for the status webhook.
+- **WhatsApp templates:** Content SIDs per notification type and locale, with the notification's variables in order.
+- **Reply webhook** (`/cktwilio/webhook/inbound`): STOP words and WhatsApp's "Stop promotions" stop the number until
+  START (`StopListInterface::REASON_REPLY`); Twilio's signature checked against the configured public URL.
+- **Status webhook** (`/cktwilio/webhook/status`): undeliverable numbers are suppressed with their consents kept
+  (`REASON_UNDELIVERABLE`); a refusal for a number that replied STOP (21610) is an opt-out, also when Twilio refuses at
+  send time. Listed in module-rate-limit.
+- **Opt-in confirmation:** one text per number and website on its first subscription (`first_for_address`), claimed
+  in Notification's delivery state; a daily cleanup.
+- **Quiet hours in the recipient's time zone** from the number (libphonenumber).
+- A request that times out after it was sent is `MessageSentException`, so it is never sent twice.
+
+No public release has been tagged or published yet.

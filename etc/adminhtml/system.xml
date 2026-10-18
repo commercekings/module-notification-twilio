@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="commercekings_notification">
+            <!-- the provider selectors for the channels this module serves, in Notification's Delivery group -->
+            <group id="general">
+                <field id="provider_sms" translate="label comment" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>SMS provider</label>
+                    <source_model>CommerceKingsTwilioSmsProviderSource</source_model>
+                    <comment>Who sends text messages. With one provider installed it is used automatically.</comment>
+                </field>
+                <field id="provider_whatsapp" translate="label comment" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>WhatsApp provider</label>
+                    <source_model>CommerceKingsTwilioWhatsappProviderSource</source_model>
+                    <comment>Who sends WhatsApp messages. With one provider installed it is used automatically.</comment>
+                </field>
+            </group>
+            <group id="twilio" translate="label comment" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Twilio</label>
+                <fieldset_css>commercekings-config-section</fieldset_css>
+                <comment><![CDATA[Text and WhatsApp messages through Twilio. In the Twilio Console, set the number's (or Messaging Service's) incoming message webhook to <code>{public URL}/cktwilio/webhook/inbound</code> (HTTP POST); delivery status is requested per message.]]></comment>
+                <field id="account_sid" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Account SID</label>
+                </field>
+                <field id="auth_token" translate="label comment" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Auth token</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <comment>Signs and authorizes the requests both ways; stored encrypted.</comment>
+                </field>
+                <field id="messaging_service_sid" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Messaging Service SID</label>
+                    <comment>Recommended for SMS (MG…): Twilio picks the sending number and handles STOP and START. Used for WhatsApp too when no WhatsApp number is set.</comment>
+                </field>
+                <field id="sms_from" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>SMS number</label>
+                    <comment>The sending number in E.164 (e.g. +14155550100), when no Messaging Service is set.</comment>
+                </field>
+                <field id="whatsapp_from" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>WhatsApp number</label>
+                    <comment>The WhatsApp sender in E.164, approved in Twilio.</comment>
+                </field>
+                <field id="webhook_base_url" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Public URL</label>
+                    <comment>The shop's public HTTPS address as Twilio calls it, e.g. https://shop.example. Twilio's signature covers this exact URL. Empty: the store's secure base URL.</comment>
+                </field>
+                <field id="optin_enabled" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Opt-in confirmation</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>One text to a number's first sign-up in the website, as US carriers require. A new cart of the same number gets none.</comment>
+                </field>
+                <field id="optin_text" translate="label comment" type="textarea" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Opt-in confirmation text</label>
+                    <comment>{{store}} is the store's name. WhatsApp sends a template instead: map "twilio_optin" below.</comment>
+                    <depends><field id="optin_enabled">1</field></depends>
+                </field>
+                <field id="template_map" translate="label comment" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>WhatsApp templates</label>
+                    <frontend_model>CommerceKings\NotificationTwilio\Block\Adminhtml\Form\Field\TemplateMap</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment>Per notification type (e.g. cart_reminder_whatsapp, twilio_optin) and locale (e.g. de_DE, de, or empty for any): the approved template's Content SID (HX…) and the notification's variables for {{1}}, {{2}}, … (e.g. name, product, total, link for the WhatsApp cart reminder).</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
