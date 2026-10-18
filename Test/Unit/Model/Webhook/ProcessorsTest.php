@@ -50,6 +50,32 @@ class ProcessorsTest extends TestCase
         $this->assertSame(['resume', Channel::SMS, '+381601234567'], end($this->calls));
     }
 
+    public function testOnlyAWholeReplyThatIsAKeywordCountsIgnoringCaseSpacesAndPunctuation(): void
+    {
+        foreach (['opt out', 'Opt-Out', 'OPT OUT!', 'optout', 'stop all', 'STOP ALL', 'STOP!!', 'stop.', ' Stop ',
+            'Stop 🛑', '🛑 stop', 'Revoke', 'stopall', 'Un-subscribe', 'cancel', 'QUIT!', 'e.n.d'] as $text) {
+            $this->assertSame('stop', $this->inbound(['From' => '+381601234567', 'Body' => $text]), $text);
+        }
+        foreach (['stop please', 'Stop texting me', 'Cancel my order', 'Unsubscribe me', 'opt out now', 'stopwatch',
+            "Don't stop", 'please stop the music', 'nonstop', 'opt', 'stopped', 'HELP', 'Yes stop', 'yes please',
+            'start now', 'Started', 'unstoppable', '🙂', ''] as $text) {
+            $this->assertSame(null, $this->inbound(['From' => '+381601234567', 'Body' => $text]), $text);
+        }
+        foreach (['START', 'start!', ' Unstop ', 'yes', 'Yes!', 'YES 👍', 'un-stop'] as $text) {
+            $this->assertSame('start', $this->inbound(['From' => '+381601234567', 'Body' => $text]), $text);
+        }
+    }
+
+    public function testAnUnrecognizedReplyIsLoggedWithoutTheNumberOrText(): void
+    {
+        $logged = [];
+        $logger = $this->createStub(LoggerInterface::class);
+        $logger->method('info')->willReturnCallback(function ($message) use (&$logged) { $logged[] = $message; });
+        $this->assertNull((new InboundProcessor($this->stopList(), $logger))->process(['From' => '+381601234567',
+            'Body' => 'Where is my parcel?']));
+        $this->assertSame(['CommerceKings_NotificationTwilio: unrecognized reply.'], $logged);
+    }
+
     public function testTwilioSOptOutTypeAndWhatsappSStopPromotionsButton(): void
     {
         $this->assertSame('start', $this->inbound(['From' => '+381601234567', 'Body' => 'go', 'OptOutType' => 'START']));

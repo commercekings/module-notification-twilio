@@ -7,8 +7,8 @@ use CommerceKings\Notification\Api\StopListInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * A reply: STOP and its synonyms (and WhatsApp's "Stop promotions" button) stop the number on its channel until it
- * sends START (StopListInterface::REASON_REPLY); START and its synonyms lift it (removed subscriptions do not come
+ * A reply: STOP and its synonyms ("opt out", "STOP!!" too; see keyword()) and WhatsApp's "Stop
+ * promotions" button stop the number on its channel until it sends START (StopListInterface::REASON_REPLY); START and its synonyms lift it (removed subscriptions do not come
  * back). With Twilio's Advanced Opt-Out, Twilio's own OptOutType decides; anything else is left alone.
  */
 class InboundProcessor
@@ -34,6 +34,7 @@ class InboundProcessor
     {
         $action = $this->action($params);
         if ($action === null) {
+            $this->logger->info('CommerceKings_NotificationTwilio: unrecognized reply.'); // no number, no text
             return null;
         }
         $from = Address::parse((string)($params['From'] ?? ''));
@@ -67,11 +68,21 @@ class InboundProcessor
                 return 'stop';
             }
         }
-        $word = strtoupper(trim((string)preg_replace('/[^\p{L}]+/u', ' ', (string)($params['Body'] ?? ''))));
+        return $this->keyword((string)($params['Body'] ?? '')) ?: null;
+    }
+
+    /**
+     * The keyword of a reply: the whole message is exactly a keyword, ignoring case, spaces, hyphens, punctuation and
+     * emoji ("Opt-out!" is OPTOUT, "stop all" STOPALL) - the industry rule; "stop please" is none (the provider's own
+     * opt-out handling and the merchant cover those).
+     */
+    private function keyword(string $text): string
+    {
+        $word = (string)preg_replace('/[^\p{L}]+/u', '', mb_strtoupper($text, 'UTF-8'));
         return match (true) {
             in_array($word, self::STOP_WORDS, true) => 'stop',
             in_array($word, self::START_WORDS, true) => 'start',
-            default => null,
+            default => '',
         };
     }
 }

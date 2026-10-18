@@ -16,6 +16,7 @@ Email is built into Notification and works out of the box; this module adds text
   sent through Twilio.
 - **STOP means stop.** Replies like STOP, UNSUBSCRIBE or WhatsApp's "Stop promotions" stop the number until it sends
   START; Twilio's own opt-out refusals are learned too. The webhooks check Twilio's signature.
+  A reply counts when it is exactly an opt-out keyword, ignoring case, spaces and punctuation ("opt out", "STOP!!").
 - **Undeliverable numbers rest.** A number Twilio reports as unreachable is left out for a while, keeping its consent.
 - **Opt-in confirmation.** One text to a number's first sign-up, as US carriers require – never one per cart.
 - **Quiet hours in the recipient's time zone,** worked out from the number (US state laws go by local time).
