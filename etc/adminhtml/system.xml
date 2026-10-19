@@ -19,7 +19,7 @@
             <group id="twilio" translate="label comment" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Twilio</label>
                 <fieldset_css>commercekings-config-section</fieldset_css>
-                <comment><![CDATA[Text and WhatsApp messages through Twilio. In the Twilio Console, set the number's (or Messaging Service's) incoming message webhook to <code>{public URL}/cktwilio/webhook/inbound</code> (HTTP POST); delivery status is requested per message.]]></comment>
+                <comment>Text and WhatsApp messages through your Twilio account.</comment>
                 <field id="account_sid" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Account SID</label>
                 </field>
@@ -42,7 +42,7 @@
                 </field>
                 <field id="webhook_base_url" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Public URL</label>
-                    <comment>The shop's public HTTPS address as Twilio calls it, e.g. https://shop.example. Twilio's signature covers this exact URL. Empty: the store's secure base URL.</comment>
+                    <comment><![CDATA[The shop's public HTTPS address as Twilio calls it, e.g. https://shop.example. Twilio's signature covers this exact URL. Empty: the store's secure base URL. In the Twilio Console, set the number's (or Messaging Service's) incoming message webhook to <code>{public URL}/cktwilio/webhook/inbound</code> (HTTP POST); delivery status is requested per message.]]></comment>
                 </field>
                 <field id="optin_enabled" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Opt-in confirmation</label>

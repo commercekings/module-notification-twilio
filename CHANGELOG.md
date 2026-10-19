@@ -8,7 +8,7 @@ First release. Requires Magento 2.4.4 or later and `commercekings/module-notific
   `TemporaryFailureException` (nothing sent, try again after the wait); any other 5xx counts as maybe sent
   (`MessageSentException`, never sent twice) - the timeout/5xx rule in [docs/provider-api.md](docs/provider-api.md).
 - **Providers:** Twilio SMS (`twilio_sms`) and WhatsApp (`twilio_whatsapp`) for Notification's channels, with the
-  provider selectors under *Delivery*; credentials per website (the auth token encrypted); SMS from a Messaging
+  provider selectors under *Channels and providers*; credentials per website (the auth token encrypted); SMS from a Messaging
   Service or a number, WhatsApp from its number; every message asks for the status webhook.
 - **WhatsApp templates:** Content SIDs per notification type and locale, with the notification's variables in order.
 - **Reply webhook** (`/cktwilio/webhook/inbound`): STOP words and WhatsApp's "Stop promotions" stop the number until

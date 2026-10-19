@@ -46,7 +46,7 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
 | Public URL (website) | the store's secure base URL – the address Twilio calls, which its signature covers |
 | Opt-in confirmation, text (store view) | Yes, "{{store}}: you are signed up for text messages … Reply STOP to stop, HELP for help." |
 | WhatsApp templates (website) | – rows of notification type, locale, Content SID and variables |
-| SMS provider, WhatsApp provider (*Delivery*, website) | the only installed one |
+| SMS provider, WhatsApp provider (*Channels and providers*, website) | the only installed one |
 
 ## Before going live
 
@@ -54,7 +54,7 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
   one of them – keep one.
 - Use a Messaging Service with Twilio's Advanced Opt-Out, or make sure the number answers STOP and HELP.
 - Set the incoming-message webhook (POST) on the number or Messaging Service; delivery status is requested per message.
-- Notification's *Quiet hours* are on by default for SMS and WhatsApp (20:00–08:00) – check the window; this module
+- Notification's quiet hours (*Sending rules*) are on by default for SMS and WhatsApp (20:00–08:00) – check the window; this module
   keeps them in the recipient's time zone.
 - Do not rate-limit the incoming-message webhook: a refused STOP is not sent again. The status webhook may be
   limited ([module-rate-limit](https://github.com/commercekings/module-rate-limit) lists it).

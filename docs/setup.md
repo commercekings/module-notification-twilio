@@ -27,7 +27,7 @@ Connecting `commercekings/module-notification-twilio` to Twilio. Start with the 
 | WhatsApp templates | one row per notification type and locale |
 
 Install one provider module per channel: with another SMS or WhatsApp provider module installed too, selecting Twilio
-under *Delivery* alone doesn't separate their recipient time zones.
+under *Channels and providers* alone doesn't separate their recipient time zones.
 
 ### WhatsApp templates
 
