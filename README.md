@@ -67,6 +67,9 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
 - SMS text only (no MMS); WhatsApp approved templates only (no free text outside a conversation).
 - Time zones come from the number's country and area code; a number that moved keeps its old zone.
 - No delivery reports in the admin: the status webhook only acts on undeliverable numbers and opt-outs.
+- **Live testing:** not yet tested against a live Twilio account (Twilio trials aren't available in our country).
+  It is verified with unit and integration tests and an end-to-end test against a simulated Twilio API. Test on your
+  own Twilio account before going live.
 
 ## More
 
