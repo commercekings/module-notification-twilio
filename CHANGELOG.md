@@ -18,7 +18,11 @@ First release. Requires Magento 2.4.4 or later and `commercekings/module-notific
   send time, and a send refused for an invalid or non-mobile number (21211, 21614) suppresses it. Listed in
   module-rate-limit.
 - **Opt-in confirmation:** one text per number and website on its first subscription (`first_for_address`), claimed
-  in Notification's delivery state; a daily cleanup.
+  in Notification's delivery state; a daily cleanup. Never lost: a send refused for now (429/503 Retry-After) or
+  failed before Twilio took it, a broker that is down and a lost message are retried by a 5-minute cron (8 attempts,
+  then logged); one that may be out is never sent again.
+- **Reply order:** Twilio's message webhook has no receive time; replies count when they arrive (Twilio does not
+  retry them by default).
 - **Quiet hours in the recipient's time zone** from the number (libphonenumber).
 - A request that times out after it was sent is `MessageSentException`, so it is never sent twice.
 

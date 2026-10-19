@@ -24,6 +24,8 @@ class ProcessorsTest extends TestCase
                 if ($this->invalid) {
                     throw new \InvalidArgumentException('No valid recipient');
                 }
+                // Twilio sends no receive time: the optional request time (StopListInterface) stays null
+                $this->assertNull(array_pop($arguments));
                 $this->calls[] = [$method, ...$arguments];
             });
         }

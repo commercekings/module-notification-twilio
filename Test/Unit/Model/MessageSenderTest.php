@@ -42,7 +42,7 @@ class MessageSenderTest extends TestCase
             return ['sid' => 'SM1'];
         });
         $stopList = $this->createStub(StopListInterface::class);
-        $stopList->method('stop')->willReturnCallback(function (...$arguments) { $this->stops[] = $arguments; });
+        $stopList->method('stop')->willReturnCallback(function (...$arguments) { $this->stops[] = array_slice($arguments, 0, 3); });
         $scope = $this->createStub(ScopeConfigInterface::class);
         $scope->method('getValue')->willReturn('de_CH');
         return new MessageSender($config, $client, new TemplateMap($config), $stopList, $scope);

@@ -10,6 +10,11 @@ use Psr\Log\LoggerInterface;
  * A reply: STOP and its synonyms ("opt out", "STOP!!" too; see keyword()) and WhatsApp's "Stop
  * promotions" button stop the number on its channel until it sends START (StopListInterface::REASON_REPLY); START and its synonyms lift it (removed subscriptions do not come
  * back). With Twilio's Advanced Opt-Out, Twilio's own OptOutType decides; anything else is left alone.
+ *
+ * Order: Twilio's message webhook carries no receive time, so a reply counts as received when it arrives. Twilio sends
+ * a webhook once (by default it retries only a failed connection, at once), so replies do not arrive late; with
+ * connection overrides that retry for longer, a delayed START could lift a newer STOP. Infobip's replies carry their
+ * time (StopListInterface::resume() with it).
  */
 class InboundProcessor
 {

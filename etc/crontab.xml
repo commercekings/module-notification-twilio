@@ -4,5 +4,8 @@
         <job name="commercekings_notification_twilio_optin_cleanup" instance="CommerceKings\NotificationTwilio\Cron\CleanUpOptinState" method="execute">
             <schedule>35 3 * * *</schedule>
         </job>
+        <job name="commercekings_notification_twilio_optin_retry" instance="CommerceKings\NotificationTwilio\Cron\RetryOptinConfirmations" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
     </group>
 </config>

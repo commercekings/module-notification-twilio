@@ -9,13 +9,19 @@ use CommerceKings\Notification\Api\DeliveryStateInterface;
 use CommerceKings\Notification\Api\SenderInterface;
 use CommerceKings\Notification\Api\SubscriptionRepositoryInterface;
 use CommerceKings\Notification\Exception\MessageSentException;
+use CommerceKings\Notification\Exception\TemporaryFailureException;
 use CommerceKings\NotificationTwilio\Model\Config;
 use CommerceKings\NotificationTwilio\Model\Optin\Confirmation;
+use CommerceKings\NotificationTwilio\Model\Optin\Pending;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
-/** One confirmation per number and website, ever: claimed in Notification's delivery state before it is sent. */
+/**
+ * One confirmation per number and website, ever: claimed in Notification's delivery state before it is sent. Never
+ * lost: what fails before Twilio took it is retried (Pending); what may be out keeps its claim.
+ */
 class ConfirmationTest extends TestCase
 {
     private array $updates = [];
@@ -23,6 +29,11 @@ class ConfirmationTest extends TestCase
     private array $deliveries = [];
     private ?\Throwable $sendFailure = null;
     private ?Subscription $subscription;
+    /** @var array<int, array> calls to Pending */
+    private array $pending = [];
+    private bool $waiting = false;
+    private bool $retriesLeft = true;
+    private array $errors = [];
 
     protected function setUp(): void
     {
@@ -50,48 +61,111 @@ class ConfirmationTest extends TestCase
         $config->method('getStoreName')->willReturn('Acme');
         $db = $this->createStub(AdapterInterface::class);
         $db->method('update')->willReturnCallback(function ($table, $data, $where) {
-            $this->updates[] = [$data, $where];
+            $this->updates[] = [array_map(fn ($value) => is_object($value) ? (string)$value : $value, $data), $where];
             return count($this->updates) === 1 ? $this->claimResult : 1;
         });
         $resource = $this->createStub(ResourceConnection::class);
         $resource->method('getConnection')->willReturn($db);
-        return new Confirmation($repository, $state, $sender, $config, $resource);
+        $pending = $this->createStub(Pending::class);
+        $pending->method('isWaiting')->willReturnCallback(fn () => $this->waiting);
+        $pending->method('done')->willReturnCallback(function (int $id) { $this->pending[] = ['done', $id]; });
+        $pending->method('failed')->willReturnCallback(function (int $id, ?int $wait = null) {
+            $this->pending[] = ['failed', $id, $wait];
+            return $this->retriesLeft;
+        });
+        $logger = $this->createStub(LoggerInterface::class);
+        $logger->method('error')->willReturnCallback(function ($message) { $this->errors[] = $message; });
+        return new Confirmation($repository, $state, $sender, $config, $resource, $pending, $logger);
+    }
+
+    private function process(): ?\Throwable
+    {
+        try {
+            $this->confirmation()->process('7');
+        } catch (\Throwable $error) {
+            return $error;
+        }
+        return null;
     }
 
     public function testTheClaimedNumberGetsOneTextThatCannotBeStoppedOrHeld(): void
     {
-        $this->confirmation()->process('7');
+        $this->assertNull($this->process());
         $this->assertContains('sent_at IS NULL', $this->updates[0][1], 'claimed only if never sent');
         $this->assertSame(5, $this->updates[0][1]['reference_id = ?'], 'keyed by the number contact');
+        $this->assertSame('NOW()', $this->updates[0][0]['queued_at'], 'marked as sending while it is sent');
         $delivery = $this->deliveries[0];
         $this->assertSame(['sms', '+381601234567', false, false, 'twilio_optin'],
             [$delivery->channel, $delivery->recipient, $delivery->useCooldown, $delivery->stoppable, $delivery->type]);
         $this->assertSame('Acme: you are signed up. Reply STOP to stop.', ($delivery->content)()->text);
+        $this->assertSame([['queued_at' => null], ['type = ?' => 'twilio_optin', 'reference_id = ?' => 5, "subject_key = ''"]],
+            $this->updates[1], 'sent: the claim stays, the sending mark goes');
+        $this->assertSame([['done', 7]], $this->pending);
     }
 
-    public function testAlreadyConfirmedOrGoneSendsNothing(): void
+    public function testAlreadyConfirmedOrGoneSendsNothingAndEndsThePendingRow(): void
     {
         $this->claimResult = 0;
-        $this->confirmation()->process('7');
+        $this->process();
         $this->subscription = null;
-        $this->confirmation()->process('7');
+        $this->process();
         $this->assertSame([], $this->deliveries);
+        $this->assertSame([['done', 7], ['done', 7]], $this->pending);
     }
 
-    public function testAFailedSendReleasesTheClaimButASentOneKeepsIt(): void
+    public function testADuplicateBeforeTheScheduledRetryLeavesItToTheRetry(): void
+    {
+        $this->waiting = true;
+        $this->process();
+        $this->assertSame([[], []], [$this->deliveries, $this->updates], 'no claim, no send');
+    }
+
+    public function testATemporaryRefusalReleasesTheClaimAndWaitsAsTwilioAsks(): void
+    {
+        $this->sendFailure = new TemporaryFailureException('429', 120);
+        $this->assertNull($this->process(), 'handled: not rethrown');
+        $this->assertSame(['sent_at' => null, 'queued_at' => null], $this->updates[1][0], 'released');
+        $this->assertSame([['failed', 7, 120]], $this->pending);
+        $this->pending = [];
+        $this->updates = [];
+        $this->sendFailure = new TemporaryFailureException('503 without Retry-After');
+        $this->process();
+        $this->assertSame([['failed', 7, null]], $this->pending, 'without a Retry-After: the growing wait');
+    }
+
+    public function testAFailureBeforeTwilioTookItIsRetriedAndRethrown(): void
     {
         $this->sendFailure = new \RuntimeException('Twilio unreachable');
-        try {
-            $this->confirmation()->process('7');
-        } catch (\RuntimeException) {
-        }
-        $this->assertSame(['sent_at' => null], $this->updates[1][0], 'released');
-        $this->updates = [];
+        $this->assertSame($this->sendFailure, $this->process());
+        $this->assertSame(['sent_at' => null, 'queued_at' => null], $this->updates[1][0], 'released');
+        $this->assertSame([['failed', 7, null]], $this->pending);
+        $this->assertSame([], $this->errors);
+    }
+
+    public function testAfterTheLastAttemptItIsGivenUpAndLoggedWithoutTheNumber(): void
+    {
+        $this->retriesLeft = false;
+        $this->sendFailure = new \RuntimeException('Twilio unreachable');
+        $this->process();
+        $this->assertCount(1, $this->errors);
+        $this->assertStringContainsString('subscription 7 was given up after 8 failed attempts', $this->errors[0]);
+        $this->assertStringNotContainsString('381601234567', $this->errors[0]);
+    }
+
+    public function testAMessageThatMayBeOutKeepsItsClaimAndIsNeverRetried(): void
+    {
         $this->sendFailure = new MessageSentException('no answer');
-        try {
-            $this->confirmation()->process('7');
-        } catch (MessageSentException) {
-        }
-        $this->assertCount(1, $this->updates, 'kept: it may be out');
+        $this->assertInstanceOf(MessageSentException::class, $this->process());
+        $this->assertSame(['queued_at' => null], $this->updates[1][0], 'the claim (sent_at) stays');
+        $this->assertCount(2, $this->updates);
+        $this->assertSame([['done', 7]], $this->pending);
+    }
+
+    public function testAnInvalidNumberIsNotRetried(): void
+    {
+        $this->sendFailure = new \InvalidArgumentException('not a number');
+        $this->assertInstanceOf(\InvalidArgumentException::class, $this->process());
+        $this->assertSame(['sent_at' => null, 'queued_at' => null], $this->updates[1][0]);
+        $this->assertSame([['done', 7]], $this->pending);
     }
 }

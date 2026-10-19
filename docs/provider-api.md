@@ -122,6 +122,11 @@ These are Twilio's default opt-out and opt-in keywords; `REVOKE` and `OPTOUT` we
 [opt-out keywords](https://support.twilio.com/hc/en-us/articles/223134027-Twilio-Support-for-Opt-Out-Keywords-SMS-STOP-Filtering),
 [OptOutType](https://support.twilio.com/hc/en-us/articles/31560110671259-How-to-Track-Opt-Out-Opt-In-and-Help-Messages-Using-the-OptOutType-Parameter)).
 
+**Order (limitation):** the message webhook carries no receive time, so a reply counts when it arrives. Twilio
+retries a webhook by default only once, at once, after a failed connection, so replies do not arrive late; with
+connection overrides that retry for longer (`#rc`/`#rp` on the URL), a delayed START could lift a newer STOP. Infobip's
+replies carry their time and are ordered.
+
 Docs: [Messaging webhook request](https://www.twilio.com/docs/messaging/guides/webhook-request).
 
 ### Status callbacks – fields read
