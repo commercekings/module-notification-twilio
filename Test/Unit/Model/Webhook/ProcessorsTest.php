@@ -98,6 +98,18 @@ class ProcessorsTest extends TestCase
         $this->assertSame('+381601234567', $this->calls[0][2]);
     }
 
+    /** Errors of the shop's account or sender (trial, From, Messaging Service, verification) never stop the shopper. */
+    public function testAccountAndSenderErrorsStopNobody(): void
+    {
+        foreach (['21608', '21606', '21212', '21659', '21612', '20003', '30007', '30032', '30034', '63016', '63112'] as $code) {
+            foreach (['failed', 'undelivered'] as $status) {
+                $this->assertNull($this->statusOf(['To' => '+381601234567', 'MessageStatus' => $status, 'ErrorCode' => $code]),
+                    "$status $code");
+            }
+        }
+        $this->assertSame([], $this->calls);
+    }
+
     public function testUndeliverableNumbersAreSuppressedAndAStopRefusalIsAnOptOut(): void
     {
         $this->assertSame(StopListInterface::REASON_UNDELIVERABLE,

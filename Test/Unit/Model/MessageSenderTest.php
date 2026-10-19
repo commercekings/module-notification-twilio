@@ -117,5 +117,13 @@ class MessageSenderTest extends TestCase
         } catch (TwilioException) {
         }
         $this->assertCount(1, $this->stops, 'other refusals only fail the send');
+        foreach ([21608, 21606, 21212, 21659, 20003] as $code) { // trial number not verified, From not ours or invalid, auth
+            try {
+                $this->failure = new TwilioException('account', $code, 400);
+                $this->sender()->send(...$this->sms());
+            } catch (TwilioException) {
+            }
+        }
+        $this->assertCount(1, $this->stops, 'account and sender refusals never stop the shopper');
     }
 }
