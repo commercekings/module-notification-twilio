@@ -47,6 +47,8 @@ is returned to the caller but not stored. On a non-2xx answer the JSON body's `c
 | 2xx | – | yes | – |
 | non-2xx with error `21610` (recipient replied STOP to this sender) | `TwilioException` | no | `stop(…, REASON_REPLY)`, then the send fails |
 | non-2xx with error `21211` (invalid `To`) or `21614` (not a mobile number) | `TwilioException` | no | `stop(…, REASON_UNDELIVERABLE)`, then the send fails |
+| HTTP 429 (e.g. 20429), or 503 with `Retry-After` | `TemporaryFailureException` (`getRetryAfter()`: the header's seconds) | no | none – sent again after the wait |
+| any other 5xx (500, 502, 503 without `Retry-After`, 504, …) | `MessageSentException` | maybe | none – never sent again |
 | any other non-2xx (e.g. 20003 auth, 21606 bad `From`) | `TwilioException` (Twilio's code, HTTP status) | no | none – the feature retries on its own schedule |
 | cURL proves the request never left: errno 5, 6 (proxy/host not resolved), 7 (connection refused), 35 (TLS) | `\RuntimeException` | no | none |
 | cURL timeout (28) **with** `pretransfer_time` 0, `request_size` 0 and `size_upload` 0 | `\RuntimeException` | no | none |
@@ -55,6 +57,13 @@ is returned to the caller but not stored. On a non-2xx answer the JSON body's `c
 
 cURL reports a connect timeout and a read timeout with the same errno 28, so only the transfer counters prove that
 nothing left; without that proof a timeout counts as maybe sent.
+
+**Timeout/5xx rule:** whenever the request may have reached Twilio and no clear refusal came back – a timeout without
+cURL's proof that nothing left, an empty reply, or a 5xx other than 503 with `Retry-After` – the message counts as
+maybe sent (`MessageSentException`): it is never sent again, so a shopper is never messaged (or charged) twice; a lost
+message is the accepted cost. A clear "not now" (429, or 503 with `Retry-After`) is a `TemporaryFailureException`:
+nothing was sent, and a feature sends it again after the wait (abandoned cart: `Retry-After`, else 15 minutes, without
+counting a failed attempt).
 
 Docs: [Error and warning dictionary](https://www.twilio.com/docs/api/errors),
 [21610](https://www.twilio.com/docs/api/errors/21610).

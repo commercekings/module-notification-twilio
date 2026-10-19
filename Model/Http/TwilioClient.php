@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace CommerceKings\NotificationTwilio\Model\Http;
 
 use CommerceKings\Notification\Exception\MessageSentException;
+use CommerceKings\Notification\Exception\TemporaryFailureException;
 use CommerceKings\NotificationTwilio\Exception\TwilioException;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ConnectException;
@@ -13,6 +14,8 @@ use GuzzleHttp\Exception\RequestException;
 /**
  * Twilio's REST API (Messages). What a failure means for the sender:
  * - Twilio answered with an error: nothing was sent – TwilioException with Twilio's code;
+ * - HTTP 429, or 503 with Retry-After: nothing was sent, try again soon – TemporaryFailureException;
+ * - any other 5xx: it may have been sent – MessageSentException;
  * - no connection (proven by cURL's report): nothing was sent – \RuntimeException;
  * - anything else, e.g. a timeout waiting for the answer: it may have been sent – MessageSentException, so it is
  *   never sent twice.
@@ -70,6 +73,16 @@ class TwilioClient
         $body = is_array($body) ? $body : [];
         if ($status >= 200 && $status < 300) {
             return $body;
+        }
+        $retryAfter = TemporaryFailureException::parseRetryAfter($response->getHeaderLine('Retry-After'));
+        if ($status === 429 || ($status === 503 && $retryAfter !== null)) {
+            // too many requests, or briefly unavailable and Twilio said for how long: nothing was sent, try again soon
+            throw new TemporaryFailureException(sprintf('Twilio refused the message for now (HTTP %d); nothing was'
+                . ' sent.', $status), $retryAfter);
+        }
+        if ($status >= 500) {
+            // a server error may come after Twilio queued the message: never send it twice
+            throw new MessageSentException(sprintf('Twilio answered HTTP %d; the message may have been sent.', $status));
         }
         throw new TwilioException(sprintf('Twilio refused the message (HTTP %d, error %d).', $status, (int)($body['code'] ?? 0)),
             (int)($body['code'] ?? 0), $status);

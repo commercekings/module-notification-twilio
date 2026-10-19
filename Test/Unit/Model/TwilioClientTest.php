@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace CommerceKings\NotificationTwilio\Test\Unit\Model;
 
 use CommerceKings\Notification\Exception\MessageSentException;
+use CommerceKings\Notification\Exception\TemporaryFailureException;
 use CommerceKings\NotificationTwilio\Exception\TwilioException;
 use CommerceKings\NotificationTwilio\Model\Http\TwilioClient;
 use GuzzleHttp\Client;
@@ -116,6 +117,49 @@ class TwilioClientTest extends TestCase
             $this->client([])->createMessage('', 'token', []);
         } finally {
             $this->assertSame([], $this->history);
+        }
+    }
+
+    /** A rate limit, or a short outage with a stated wait: nothing was sent, send it again soon. */
+    public function testA429OrA503WithRetryAfterIsATemporaryRefusal(): void
+    {
+        foreach ([[new Response(429, ['Retry-After' => '30'], '{"code":20429,"message":"Too Many Requests"}'), 30],
+            [new Response(429, [], '{"code":20429,"message":"Too Many Requests"}'), null],
+            [new Response(503, ['Retry-After' => 'Mon, 19 Oct 2099 10:05:00 GMT'], ''), 'date'],
+            [new Response(503, ['Retry-After' => '120'], ''), 120]] as [$response, $wait]) {
+            try {
+                $this->client([$response])->createMessage('AC1', 't', []);
+                $this->fail('Expected a temporary refusal');
+            } catch (TemporaryFailureException $error) {
+                $this->assertStringContainsString('HTTP ' . $response->getStatusCode(), $error->getMessage());
+                $wait === 'date' ? $this->assertGreaterThan(0, $error->getRetryAfter())
+                    : $this->assertSame($wait, $error->getRetryAfter());
+            }
+        }
+    }
+
+    /** A server error may come after the message was taken: never send it twice. A 503 without a wait is one too. */
+    public function testOtherServerErrorsMayHaveBeenSent(): void
+    {
+        foreach ([500, 502, 503, 504] as $status) {
+            try {
+                $this->client([new Response($status, [], '')])->createMessage('AC1', 't', []);
+                $this->fail('Expected maybe sent for ' . $status);
+            } catch (MessageSentException $error) {
+                $this->assertStringContainsString('HTTP ' . $status, $error->getMessage());
+            }
+        }
+    }
+
+    public function testOtherClientErrorsStayRefusals(): void
+    {
+        foreach ([400, 401, 403, 404] as $status) {
+            try {
+                $this->client([new Response($status, ['Retry-After' => '30'], '{}')])->createMessage('AC1', 't', []);
+                $this->fail('Expected a refusal for ' . $status);
+            } catch (TwilioException $error) {
+                $this->assertSame($status, $error->getCode());
+            }
         }
     }
 }

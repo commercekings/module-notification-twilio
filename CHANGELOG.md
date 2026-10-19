@@ -4,6 +4,9 @@
 
 First release. Requires Magento 2.4.4 or later and `commercekings/module-notification`.
 
+- **Rate limits and server errors:** HTTP 429, or 503 with `Retry-After`, is Notification's
+  `TemporaryFailureException` (nothing sent, try again after the wait); any other 5xx counts as maybe sent
+  (`MessageSentException`, never sent twice) - the timeout/5xx rule in [docs/provider-api.md](docs/provider-api.md).
 - **Providers:** Twilio SMS (`twilio_sms`) and WhatsApp (`twilio_whatsapp`) for Notification's channels, with the
   provider selectors under *Delivery*; credentials per website (the auth token encrypted); SMS from a Messaging
   Service or a number, WhatsApp from its number; every message asks for the status webhook.
