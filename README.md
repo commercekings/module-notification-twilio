@@ -73,7 +73,7 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
 
 ## More
 
-[Setup](docs/setup.md) · [How it works](docs/how-it-works.md) · [Compatibility](COMPATIBILITY.md) · [Changes](CHANGELOG.md)
+[Setup](docs/setup.md) · [How it works](docs/how-it-works.md) · [Provider API](docs/provider-api.md) · [Compatibility](COMPATIBILITY.md) · [Changes](CHANGELOG.md)
 
 ## Disclaimer
 
