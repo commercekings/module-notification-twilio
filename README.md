@@ -67,9 +67,6 @@ Messaging Service (or a sending number), per website, and in the Twilio Console 
 - SMS text only (no MMS); WhatsApp approved templates only (no free text outside a conversation).
 - Time zones come from the number's country and area code; a number that moved keeps its old zone.
 - No delivery reports in the admin: the status webhook only acts on undeliverable numbers and opt-outs.
-- **Live testing:** not yet tested against a live Twilio account (Twilio trials aren't available in our country).
-  It is verified with unit and integration tests and an end-to-end test against a simulated Twilio API. Test on your
-  own Twilio account before going live.
 
 ## More
 
@@ -81,6 +78,13 @@ These modules help you ask for, record and respect your shoppers' choices – th
 their own. You are responsible for your store's privacy: what you collect, the wording you show, your privacy policy
 and whether your setup meets the laws that apply to you (e.g. GDPR, ePrivacy, TCPA, carrier rules for text
 messages). Get legal advice if you are unsure.
+
+## Tested (as of 0.1.0)
+
+- **Automated tests:** 61 unit and 4 integration tests (unit tests run on every push); 81.0% line coverage by the unit tests.
+- **End to end on Magento 2.4.9:** SMS and WhatsApp against a simulated Twilio API: messages, opt-in confirmation, STOP and START replies and status webhooks, error codes and timeouts.
+- **Install:** a fresh install of every CommerceKings package from GitHub on an empty Magento database, verified.
+- **Not tested:** a live Twilio account (Twilio trials are not available in our country); a STOP reply from a real phone.
 
 ---
 
