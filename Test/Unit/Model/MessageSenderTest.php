@@ -111,12 +111,6 @@ class MessageSenderTest extends TestCase
         } catch (TwilioException) {
         }
         $this->assertSame([[Channel::SMS, '+381601234567', StopListInterface::REASON_REPLY]], $this->stops);
-        $this->failure = new TwilioException('invalid', 21211, 400);
-        try {
-            $this->sender()->send(...$this->sms());
-        } catch (TwilioException) {
-        }
-        $this->assertCount(1, $this->stops, 'other refusals only fail the send');
         foreach ([21608, 21606, 21212, 21659, 20003] as $code) { // trial number not verified, From not ours or invalid, auth
             try {
                 $this->failure = new TwilioException('account', $code, 400);
@@ -125,5 +119,21 @@ class MessageSenderTest extends TestCase
             }
         }
         $this->assertCount(1, $this->stops, 'account and sender refusals never stop the shopper');
+    }
+
+    /** Twilio refusing an invalid (21211) or non-mobile (21614) number: it is suppressed, the send fails as refused. */
+    public function testARefusalForANumberThatCannotReceiveSuppressesIt(): void
+    {
+        foreach ([21211, 21614] as $code) {
+            $this->failure = new TwilioException('number', $code, 400);
+            try {
+                $this->sender()->send(...$this->sms());
+                $this->fail('Expected the refusal');
+            } catch (TwilioException $error) {
+                $this->assertSame($code, $error->getTwilioCode());
+            }
+        }
+        $this->assertSame([[Channel::SMS, '+381601234567', StopListInterface::REASON_UNDELIVERABLE],
+            [Channel::SMS, '+381601234567', StopListInterface::REASON_UNDELIVERABLE]], $this->stops);
     }
 }

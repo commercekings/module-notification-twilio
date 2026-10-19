@@ -15,13 +15,16 @@ use Magento\Store\Model\ScopeInterface;
 /**
  * One Twilio message for a delivery: an SMS with the text, or a WhatsApp template (a Content SID from the template map
  * or Delivery::$templateId) with its variables. Each message asks for the status webhook, which reports late failures.
- * Twilio refusing a number that replied STOP (21610) is that person's opt-out: the stop list learns it, then the send
- * fails as refused.
+ * Twilio refusing a number that replied STOP (21610) is that person's opt-out; refusing an invalid or non-mobile number
+ * (21211, 21614) suppresses it (StopListInterface::REASON_UNDELIVERABLE). The stop list learns it, then the send fails
+ * as refused.
  */
 class MessageSender
 {
     /** Twilio: the recipient unsubscribed from this sender (replied STOP). */
     public const ERROR_UNSUBSCRIBED = 21610;
+    /** Twilio: the To number is invalid (21211) or not a mobile number (21614). */
+    public const ERRORS_UNDELIVERABLE = [21211, 21614];
 
     public function __construct(
         private readonly Config $config,
@@ -45,8 +48,13 @@ class MessageSender
         try {
             $this->client->createMessage($this->config->getAccountSid($storeId), $this->config->getAuthToken($storeId), $params);
         } catch (TwilioException $error) {
-            if ($error->getTwilioCode() === self::ERROR_UNSUBSCRIBED) {
-                $this->stopList->stop($delivery->channel, $delivery->recipient, StopListInterface::REASON_REPLY);
+            $reason = match (true) {
+                $error->getTwilioCode() === self::ERROR_UNSUBSCRIBED => StopListInterface::REASON_REPLY,
+                in_array($error->getTwilioCode(), self::ERRORS_UNDELIVERABLE, true) => StopListInterface::REASON_UNDELIVERABLE,
+                default => null,
+            };
+            if ($reason !== null) {
+                $this->stopList->stop($delivery->channel, $delivery->recipient, $reason);
             }
             throw $error;
         }

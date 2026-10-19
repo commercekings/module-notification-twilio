@@ -46,7 +46,8 @@ is returned to the caller but not stored. On a non-2xx answer the JSON body's `c
 |---|---|---|---|
 | 2xx | – | yes | – |
 | non-2xx with error `21610` (recipient replied STOP to this sender) | `TwilioException` | no | `stop(…, REASON_REPLY)`, then the send fails |
-| any other non-2xx (e.g. 20003 auth, 21211 invalid `To`, 21606 bad `From`) | `TwilioException` (Twilio's code, HTTP status) | no | none – the feature retries on its own schedule |
+| non-2xx with error `21211` (invalid `To`) or `21614` (not a mobile number) | `TwilioException` | no | `stop(…, REASON_UNDELIVERABLE)`, then the send fails |
+| any other non-2xx (e.g. 20003 auth, 21606 bad `From`) | `TwilioException` (Twilio's code, HTTP status) | no | none – the feature retries on its own schedule |
 | cURL proves the request never left: errno 5, 6 (proxy/host not resolved), 7 (connection refused), 35 (TLS) | `\RuntimeException` | no | none |
 | cURL timeout (28) **with** `pretransfer_time` 0, `request_size` 0 and `size_upload` 0 | `\RuntimeException` | no | none |
 | any other timeout, empty reply (52), or other transport error | `MessageSentException` | maybe | none – never sent again, so a shopper is never texted (or charged) twice |
@@ -97,7 +98,9 @@ request is always answered 200. Do not rate-limit the inbound webhook: a refused
 
 **Keyword rule** (`InboundProcessor::keyword()`): the whole reply, upper-cased, with every character that is not a
 letter removed (spaces, hyphens, punctuation, digits, emoji), must equal a keyword. "Stop!!", " stop ", "Opt-out" and
-"stop all" (and, as digits are removed too, "STOP 2") match; "stop please" does not.
+"stop all" (and, as digits are removed too, "STOP 2") match; "stop please" does not. Twilio itself does not treat
+"OPT OUT" (with a space) as an opt-out, while we do – the conservative direction: we stop texting a number Twilio
+would still send to.
 
 | Keywords | Effect |
 |---|---|
@@ -141,3 +144,12 @@ without a row, `Delivery::$templateId` is used as the Content SID with no variab
 `DeliveryContent::$vars` names in template order and become `ContentVariables` keys `"1"`, `"2"`, …; a missing or
 non-scalar value is sent as an empty string. The opt-in confirmation uses type `twilio_optin` (variable `store`).
 Docs: [Content API](https://www.twilio.com/docs/content), [Send templates](https://www.twilio.com/docs/content/send-templates-created-with-the-content-template-builder).
+
+## Not verified
+
+From Twilio's documentation and our tests only, not checked against a live account:
+
+- Every call and webhook on this page (no live Twilio test yet).
+- WhatsApp with no WhatsApp number set sends `MessagingServiceSid` without `From`. The Message resource allows that;
+  Twilio's Content template guide lists `From` as always required (`whatsapp:…` or the `MG…` SID).
+- Whether 21211 and 21614 also come in status callbacks; Twilio's error pages do not say. Both paths are handled.

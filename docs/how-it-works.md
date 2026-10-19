@@ -20,7 +20,8 @@ else the Messaging Service. Twilio addresses (`whatsapp:+…`) become Notificati
 without `+` gets one. An address Notification refuses is ignored and still answered 200, as Twilio does not resend.
 
 **A refused send.** Twilio refusing a number that replied STOP to this sender (21610) stops it in Notification (reason
-*reply*) and fails the send; other refusals only fail it, and the feature retries on its own schedule.
+*reply*) and fails the send; refusing an invalid or non-mobile number (21211, 21614) suppresses it (reason
+*undeliverable*) and fails the send; other refusals only fail it, and the feature retries on its own schedule.
 
 **Opt-in.** The confirmation goes only when Twilio is the channel's selected provider and *Opt-in confirmation* is on
 for the store. WhatsApp sends the `twilio_optin` template instead of the text.

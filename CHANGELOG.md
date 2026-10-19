@@ -12,7 +12,8 @@ First release. Requires Magento 2.4.4 or later and `commercekings/module-notific
   START (`StopListInterface::REASON_REPLY`); Twilio's signature checked against the configured public URL.
 - **Status webhook** (`/cktwilio/webhook/status`): undeliverable numbers are suppressed with their consents kept
   (`REASON_UNDELIVERABLE`); a refusal for a number that replied STOP (21610) is an opt-out, also when Twilio refuses at
-  send time. Listed in module-rate-limit.
+  send time, and a send refused for an invalid or non-mobile number (21211, 21614) suppresses it. Listed in
+  module-rate-limit.
 - **Opt-in confirmation:** one text per number and website on its first subscription (`first_for_address`), claimed
   in Notification's delivery state; a daily cleanup.
 - **Quiet hours in the recipient's time zone** from the number (libphonenumber).
